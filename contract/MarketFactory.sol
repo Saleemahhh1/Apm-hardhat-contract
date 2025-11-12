@@ -12,7 +12,7 @@ contract MarketFactory {
 
     event MarketCreated(address indexed marketAddress, string question);
 
-    constructor(address tokenAddress) {
+    constructor(0x97b619d007ac9fC06109b5162da22603ee316470) {
         token = APMToken(0x97b619d007ac9fC06109b5162da22603ee316470);
     }
 
