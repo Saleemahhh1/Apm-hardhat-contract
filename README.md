@@ -11,7 +11,7 @@ Traditional prediction markets are centralized and lack transparency. This proje
 ## Smart Contracts
 
 ### 1. APMToken.sol
-- ERC20 token used for betting and rewards.
+- on bnb  used for betting and rewards.
 - **Deployment Address:** `0x97b619d007ac9fC06109b5162da22603ee316470`
 - **Verified Source:** [Sourcify Verification Link](https://repo.sourcify.dev/97/0x97b619d007ac9fC06109b5162da22603ee316470)
 
@@ -41,7 +41,7 @@ Traditional prediction markets are centralized and lack transparency. This proje
 ## How to Interact (Demo)
 
 ### 1. Setup
-1. Connect your wallet (MetaMask) to the correct Ethereum network.
+1. Connect your wallet (MetaMask) to the correct bnb network.
 2. Open **Remix** and load contracts.
 
 ### 2. Mint APM Tokens
@@ -50,7 +50,7 @@ Traditional prediction markets are centralized and lack transparency. This proje
 
 ### 3. Create a Market via MarketFactory
 - Input example:
-  - Market name: `"Will Ethereum price exceed $5000 by Dec 2025?"`
+  - Market name: `"Will rice price exceed $1.2 by Dec 2025?"`
   - Initial token stake: `100 APM`
 - Screenshot placeholder: `![Create Market](./screenshots/create_market.png)`
 
@@ -77,5 +77,3 @@ Traditional prediction markets are centralized and lack transparency. This proje
 | Deploy MarketFactory | `0xd636c00f4632b0b31bd85263881a1bab2d767ff095527ac80ce2637f9d74a4d9` | Tracks user-created markets |
 
 ---
-
-## Project Structure
