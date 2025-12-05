@@ -1,12 +1,16 @@
-require("@nomicfoundation/hardhat-toolbox");
+require("@nomiclabs/hardhat-ethers");
 require("dotenv").config();
 
 module.exports = {
-  solidity: "0.8.20",
+  solidity: "0.8.19",
   networks: {
-    bsctest: {
-      url: process.env.BSC_TESTNET_URL,
-      accounts: [process.env.PRIVATE_KEY],
+    bscTestnet: {
+      url: `https://data-seed-prebsc-1-s1.binance.org:8545/`,
+      accounts: [process.env.DEPLOYER_KEY]
     },
-  },
+    bscMainnet: {
+      url: `https://bsc-dataseed.binance.org/`,
+      accounts: [process.env.DEPLOYER_KEY]
+    }
+  }
 };
