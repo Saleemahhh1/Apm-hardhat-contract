@@ -8,7 +8,7 @@ contract APMToken is ERC20, Ownable {
 
     uint256 public constant MAX_SUPPLY = 1_000_000_000 * 10**18;
 
-    constructor(address initialOwner)
+    constructor(0x7375a9348294244559cedea84b69bd2d3855d220)
         ERC20("APM-Agro Token", "APM")
         Ownable(initialOwner)
     {
