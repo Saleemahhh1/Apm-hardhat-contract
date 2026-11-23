@@ -368,3 +368,185 @@
 ‎        stakes[msg.sender][NO] = 0;
 ‎
 ‎        // ---------------------------------------------------------
+// REFUND MODE
+‎        // ---------------------------------------------------------
+‎
+‎        if (refundMode) {
+‎            uint256 refundAmount =
+‎                yesStake + noStake;
+‎
+‎            totalRefunded += refundAmount;
+‎
+‎            if (refundAmount > 0) {
+‎                token.safeTransfer(
+‎                    msg.sender,
+‎                    refundAmount
+‎                );
+‎            }
+‎
+‎            emit RefundClaimed(
+‎                msg.sender,
+‎                refundAmount
+‎            );
+‎
+‎            return;
+‎        }
+‎
+‎        // ---------------------------------------------------------
+‎        // NORMAL WINNING MODE
+‎        // ---------------------------------------------------------
+‎
+‎        uint256 userWinningStake;
+‎
+‎        if (winningChoice == YES) {
+‎            userWinningStake = yesStake;
+‎        } else {
+‎            userWinningStake = noStake;
+‎        }
+‎
+‎        require(
+‎            userWinningStake > 0,
+‎            "No winning stake"
+‎        );
+‎
+‎        // Calculate user's proportional share of losing pool.
+‎        uint256 profitShare = 0;
+‎
+‎        if (losersPoolAtResolution > 0) {
+‎            profitShare =
+‎                (userWinningStake * losersPoolAtResolution)
+‎                / winnersPoolAtResolution;
+‎        }
+‎
+‎        // Fee applies only to profit, not principal.
+‎        uint256 fee =
+‎            (profitShare * feeBps)
+‎            / BPS_DENOMINATOR;
+‎
+‎        // Principal + profit - fee.
+‎        uint256 payout =
+‎            userWinningStake + profitShare - fee;
+‎
+‎        // Update accounting before token transfers.
+‎        totalWinningStakeClaimed += userWinningStake;
+‎
+‎        totalPaidOut += payout;
+‎
+‎        totalFeesCollected += fee;
+‎
+‎        // Transfer protocol fee.
+‎        if (fee > 0) {
+‎            token.safeTransfer(
+‎                treasury,
+‎                fee
+‎            );
+‎        }
+‎
+‎        // Transfer user payout.
+‎        token.safeTransfer(
+‎            msg.sender,
+‎            payout
+‎        );
+‎
+‎        emit RewardClaimed(
+‎            msg.sender,
+‎            userWinningStake,
+‎            profitShare,
+‎            fee,
+‎            payout
+‎        );
+‎
+‎        // ---------------------------------------------------------
+‎        // FINAL CLAIM ROUNDING DUST
+‎        // ---------------------------------------------------------
+‎
+‎        if (
+‎            totalWinningStakeClaimed ==
+‎            winnersPoolAtResolution
+‎        ) {
+‎            uint256 distributed =
+‎                totalPaidOut + totalFeesCollected;
+‎
+‎            uint256 remaining =
+‎                totalPoolAtResolution - distributed;
+‎
+‎            if (remaining > 0) {
+‎                token.safeTransfer(
+‎                    treasury,
+‎                    remaining
+‎                );
+‎
+‎                emit RoundingDustTransferred(
+‎                    treasury,
+‎                    remaining
+‎                );
+‎            }
+‎        }
+‎    }
+‎
+‎    // =============================================================
+‎    //                         VIEW FUNCTIONS
+‎    // =============================================================
+‎
+‎    function getYesPool()
+‎        external
+‎        view
+‎        returns (uint256)
+‎    {
+‎        return totalStakedPerChoice[YES];
+‎    }
+‎
+‎    function getNoPool()
+‎        external
+‎        view
+‎        returns (uint256)
+‎    {
+‎        return totalStakedPerChoice[NO];
+‎    }
+‎
+‎    function getTotalPool()
+‎        external
+‎        view
+‎        returns (uint256)
+‎    {
+‎        return
+‎            totalStakedPerChoice[YES] +
+‎            totalStakedPerChoice[NO];
+‎    }
+‎
+‎    function getUserStakes(
+‎        address user
+‎    )
+‎        external
+‎        view
+‎        returns (
+‎            uint256 yesStake,
+‎            uint256 noStake
+‎        )
+‎    {
+‎        yesStake = stakes[user][YES];
+‎
+‎        noStake = stakes[user][NO];
+‎    }
+‎
+‎    function getMarketStatus()
+‎        external
+‎        view
+‎        returns (string memory)
+‎    {
+‎        if (resolved && refundMode) {
+‎            return "Refund";
+‎        }
+‎
+‎        if (resolved) {
+‎            return "Resolved";
+‎        }
+‎
+‎        if (block.timestamp >= deadline) {
+‎            return "AwaitingResolution";
+‎        }
+‎
+‎        return "Open";
+‎    }
+‎}
+‎
