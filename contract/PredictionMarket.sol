@@ -261,3 +261,196 @@
 ‎    }
 ‎
 ‎    // =============================================================    // =============================================================
+/                         RESOLVE MARKET
+‎    // =============================================================
+‎
+‎    function setResult(
+‎        uint8 _winningChoice
+‎    )
+‎        external
+‎        onlyFactory
+‎    {
+‎        require(
+‎            !resolved,
+‎            "Already resolved"
+‎        );
+‎
+‎        require(
+‎            block.timestamp >= deadline,
+‎            "Deadline not reached"
+‎        );
+‎
+‎        require(
+‎            _winningChoice == YES ||
+‎            _winningChoice == NO,
+‎            "Invalid winning choice"
+‎        );
+‎
+‎        resolved = true;
+‎
+‎        winningChoice = _winningChoice;
+‎
+‎        // Snapshot both pools.
+‎        yesPoolAtResolution =
+‎            totalStakedPerChoice[YES];
+‎
+‎        noPoolAtResolution =
+‎            totalStakedPerChoice[NO];
+‎
+‎        totalPoolAtResolution =
+‎            yesPoolAtResolution + noPoolAtResolution;
+‎
+‎        // Determine winning and losing pools.
+‎        if (_winningChoice == YES) {
+‎            winnersPoolAtResolution =
+‎                yesPoolAtResolution;
+‎
+‎            losersPoolAtResolution =
+‎                noPoolAtResolution;
+‎        } else {
+‎            winnersPoolAtResolution =
+‎                noPoolAtResolution;
+‎
+‎            losersPoolAtResolution =
+‎                yesPoolAtResolution;
+‎        }
+‎
+‎        // No winning participants means refund mode.
+‎        if (winnersPoolAtResolution == 0) {
+‎            refundMode = true;
+‎        }
+‎
+‎        emit MarketResolved(
+‎            _winningChoice,
+‎            yesPoolAtResolution,
+‎            noPoolAtResolution,
+‎            refundMode
+‎        );
+‎    }
+‎
+‎    // =============================================================
+‎    //                         CLAIM REWARD
+‎    // =============================================================
+‎
+‎    function claim()
+‎        external
+‎        nonReentrant
+‎    {
+‎        require(
+‎            resolved,
+‎            "Market not resolved"
+‎        );
+‎
+‎        require(
+‎            !hasClaimed[msg.sender],
+‎            "Already claimed"
+‎        );
+‎
+‎        uint256 yesStake = stakes[msg.sender][YES];
+‎
+‎        uint256 noStake = stakes[msg.sender][NO];
+‎
+‎        require(
+‎            yesStake > 0 || noStake > 0,
+‎            "No participation"
+‎        );
+‎
+‎        // Prevent a second claim before transfers.
+‎        hasClaimed[msg.sender] = true;
+‎
+‎        // Clear user positions.
+‎        stakes[msg.sender][YES] = 0;
+‎
+‎        stakes[msg.sender][NO] = 0;
+‎
+‎        // ---------------------------------------------------------
+‎        // REFUND MODE
+‎        // ---------------------------------------------------------
+‎
+‎        if (refundMode) {
+‎            uint256 refundAmount =
+‎                yesStake + noStake;
+‎
+‎            totalRefunded += refundAmount;
+‎
+‎            if (refundAmount > 0) {
+‎                token.safeTransfer(
+‎                    msg.sender,
+‎                    refundAmount
+‎                );
+‎            }
+‎
+‎            emit RefundClaimed(
+‎                msg.sender,
+‎                refundAmount
+‎            );
+‎
+‎            return;
+‎        }
+‎
+‎        // ---------------------------------------------------------
+‎        // NORMAL WINNING MODE
+‎        // ---------------------------------------------------------
+‎
+‎        uint256 userWinningStake;
+‎
+‎        if (winningChoice == YES) {
+‎            userWinningStake = yesStake;
+‎        } else {
+‎            userWinningStake = noStake;
+‎        }
+‎
+‎        require(
+‎            userWinningStake > 0,
+‎            "No winning stake"
+‎        );
+‎
+‎        // Calculate user's proportional share of losing pool.
+‎        uint256 profitShare = 0;
+‎
+‎        if (losersPoolAtResolution > 0) {
+‎            profitShare =
+‎                (userWinningStake * losersPoolAtResolution)
+‎                / winnersPoolAtResolution;
+‎        }
+‎
+‎        // Fee applies only to profit, not principal.
+‎        uint256 fee =
+‎            (profitShare * feeBps)
+‎            / BPS_DENOMINATOR;
+‎
+‎        // Principal + profit - fee.
+‎        uint256 payout =
+‎            userWinningStake + profitShare - fee;
+‎
+‎        // Update accounting before token transfers.
+‎        totalWinningStakeClaimed += userWinningStake;
+‎
+‎        totalPaidOut += payout;
+‎
+‎        totalFeesCollected += fee;
+‎
+‎        // Transfer protocol fee.
+‎        if (fee > 0) {
+‎            token.safeTransfer(
+‎                treasury,
+‎                fee
+‎            );
+‎        }
+‎
+‎        // Transfer user payout.
+‎        token.safeTransfer(
+‎            msg.sender,
+‎            payout
+‎        );
+‎
+‎        emit RewardClaimed(
+‎            msg.sender,
+‎            userWinningStake,
+‎            profitShare,
+‎            fee,
+‎            payout
+‎        );
+‎
+‎        // ---------------------------------------------------------
+
