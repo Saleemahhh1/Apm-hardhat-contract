@@ -453,4 +453,97 @@
 ‎        );
 ‎
 ‎        // ---------------------------------------------------------
+    // FINAL CLAIM ROUNDING DUST
+‎        // ---------------------------------------------------------
+‎
+‎        if (
+‎            totalWinningStakeClaimed ==
+‎            winnersPoolAtResolution
+‎        ) {
+‎            uint256 distributed =
+‎                totalPaidOut + totalFeesCollected;
+‎
+‎            uint256 remaining =
+‎                totalPoolAtResolution - distributed;
+‎
+‎            if (remaining > 0) {
+‎                token.safeTransfer(
+‎                    treasury,
+‎                    remaining
+‎                );
+‎
+‎                emit RoundingDustTransferred(
+‎                    treasury,
+‎                    remaining
+‎                );
+‎            }
+‎        }
+‎    }
+‎
+‎    // =============================================================
+‎    //                         VIEW FUNCTIONS
+‎    // =============================================================
+‎
+‎    function getYesPool()
+‎        external
+‎        view
+‎        returns (uint256)
+‎    {
+‎        return totalStakedPerChoice[YES];
+‎    }
+‎
+‎    function getNoPool()
+‎        external
+‎        view
+‎        returns (uint256)
+‎    {
+‎        return totalStakedPerChoice[NO];
+‎    }
+‎
+‎    function getTotalPool()
+‎        external
+‎        view
+‎        returns (uint256)
+‎    {
+‎        return
+‎            totalStakedPerChoice[YES] +
+‎            totalStakedPerChoice[NO];
+‎    }
+‎
+‎    function getUserStakes(
+‎        address user
+‎    )
+‎        external
+‎        view
+‎        returns (
+‎            uint256 yesStake,
+‎            uint256 noStake
+‎        )
+‎    {
+‎        yesStake = stakes[user][YES];
+‎
+‎        noStake = stakes[user][NO];
+‎    }
+‎
+‎    function getMarketStatus()
+‎        external
+‎        view
+‎        returns (string memory)
+‎    {
+‎        if (resolved && refundMode) {
+‎            return "Refund";
+‎        }
+‎
+‎        if (resolved) {
+‎            return "Resolved";
+‎        }
+‎
+‎        if (block.timestamp >= deadline) {
+‎            return "AwaitingResolution";
+‎        }
+‎
+‎        return "Open";
+‎    }
+‎}
+‎
 
