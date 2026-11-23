@@ -133,3 +133,135 @@
 ‎    }
 ‎
 ‎    // =============================================================
+
+ //                          CONSTRUCTOR
+‎    // =============================================================
+‎
+‎    constructor(
+‎        address _token,
+‎        string memory _question,
+‎        uint256 _deadline,
+‎        address _factory,
+‎        uint256 _feeBps,
+‎        address _treasury,
+‎        address _owner
+‎    )
+‎        Ownable(_owner)
+‎    {
+‎        require(
+‎            _token != address(0),
+‎            "Token zero"
+‎        );
+‎
+‎        require(
+‎            _token.code.length > 0,
+‎            "Invalid token contract"
+‎        );
+‎
+‎        require(
+‎            _factory != address(0),
+‎            "Factory zero"
+‎        );
+‎
+‎        require(
+‎            _factory.code.length > 0,
+‎            "Invalid factory"
+‎        );
+‎
+‎        require(
+‎            _treasury != address(0),
+‎            "Treasury zero"
+‎        );
+‎
+‎        require(
+‎            bytes(_question).length > 0,
+‎            "Question required"
+‎        );
+‎
+‎        require(
+‎            _deadline > block.timestamp,
+‎            "Invalid deadline"
+‎        );
+‎
+‎        require(
+‎            _feeBps <= MAX_FEE_BPS,
+‎            "Fee exceeds maximum"
+‎        );
+‎
+‎        token = IERC20(_token);
+‎
+‎        factory = _factory;
+‎
+‎        treasury = _treasury;
+‎
+‎        question = _question;
+‎
+‎        deadline = _deadline;
+‎
+‎        feeBps = _feeBps;
+‎    }
+‎
+‎    // =============================================================
+‎    //                         PLACE BET
+‎    // =============================================================
+‎
+‎    function placeBet(
+‎        uint256 choice,
+‎        uint256 amount
+‎    )
+‎        external
+‎        beforeDeadline
+‎        nonReentrant
+‎    {
+‎        require(
+‎            !resolved,
+‎            "Market resolved"
+‎        );
+‎
+‎        require(
+‎            choice == YES || choice == NO,
+‎            "Invalid choice"
+‎        );
+‎
+‎        require(
+‎            amount > 0,
+‎            "Amount zero"
+‎        );
+‎
+‎        // Check balance before transfer.
+‎        uint256 balanceBefore = token.balanceOf(
+‎            address(this)
+‎        );
+‎
+‎        // Transfer tokens from user.
+‎        token.safeTransferFrom(
+‎            msg.sender,
+‎            address(this),
+‎            amount
+‎        );
+‎
+‎        // Check actual amount received.
+‎        uint256 balanceAfter = token.balanceOf(
+‎            address(this)
+‎        );
+‎
+‎        require(
+‎            balanceAfter - balanceBefore == amount,
+‎            "Unsupported token transfer"
+‎        );
+‎
+‎        // Update user stake.
+‎        stakes[msg.sender][choice] += amount;
+‎
+‎        // Update outcome pool.
+‎        totalStakedPerChoice[choice] += amount;
+‎
+‎        emit BetPlaced(
+‎            msg.sender,
+‎            choice,
+‎            amount
+‎        );
+‎    }
+‎
+‎    // =============================================================
+
