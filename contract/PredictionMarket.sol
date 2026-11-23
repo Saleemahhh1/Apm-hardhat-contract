@@ -56,3 +56,80 @@
 ‎    mapping(address => bool) public hasClaimed;
 ‎
 ‎    // =============================================================
+
+//                    RESOLUTION SNAPSHOTS
+‎    // =============================================================
+‎
+‎    uint256 public yesPoolAtResolution;
+‎    uint256 public noPoolAtResolution;
+‎
+‎    uint256 public winnersPoolAtResolution;
+‎    uint256 public losersPoolAtResolution;
+‎
+‎    uint256 public totalPoolAtResolution;
+‎
+‎    // Claim accounting
+‎    uint256 public totalWinningStakeClaimed;
+‎
+‎    uint256 public totalPaidOut;
+‎
+‎    uint256 public totalFeesCollected;
+‎
+‎    uint256 public totalRefunded;
+‎
+‎    // =============================================================
+‎    //                            EVENTS
+‎    // =============================================================
+‎
+‎    event BetPlaced(
+‎        address indexed user,
+‎        uint256 indexed choice,
+‎        uint256 amount
+‎    );
+‎
+‎    event MarketResolved(
+‎        uint8 indexed winningChoice,
+‎        uint256 yesPool,
+‎        uint256 noPool,
+‎        bool refundMode
+‎    );
+‎
+‎    event RewardClaimed(
+‎        address indexed user,
+‎        uint256 winningStake,
+‎        uint256 profitShare,
+‎        uint256 fee,
+‎        uint256 payout
+‎    );
+‎
+‎    event RefundClaimed(
+‎        address indexed user,
+‎        uint256 amount
+‎    );
+‎
+‎    event RoundingDustTransferred(
+‎        address indexed treasury,
+‎        uint256 amount
+‎    );
+‎
+‎    // =============================================================
+‎    //                            MODIFIERS
+‎    // =============================================================
+‎
+‎    modifier onlyFactory() {
+‎        require(
+‎            msg.sender == factory,
+‎            "Only factory"
+‎        );
+‎        _;
+‎    }
+‎
+‎    modifier beforeDeadline() {
+‎        require(
+‎            block.timestamp < deadline,
+‎            "Betting closed"
+‎        );
+‎        _;
+‎    }
+‎
+‎    // =============================================================
